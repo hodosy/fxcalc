@@ -64,13 +64,6 @@ public class FxService implements IFxService {
         throw new IllegalArgumentException("Unacceptable commission (" + commission + "). Must be between 99 and 0");
     }
 
-    @PostConstruct
-    public void mock() {
-        Map<String, BigDecimal> asd = new HashMap<>();
-        asd.put("HUF", new BigDecimal("0.1234"));
-        currencyRateHolder.put(LocalDate.now(), new DailyCurrencyRateHolder(asd));
-    }
-
     @Override
     public CalculateExchangeRateResponse calculateFx(@Valid @NotNull CalculateFxInput input) throws MessageException {
         CalculateExchangeRateResponse output = new CalculateExchangeRateResponse();
