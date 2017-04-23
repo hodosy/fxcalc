@@ -118,6 +118,7 @@ public class FxService implements IFxService {
 
     public void addCurrencyMapping(LocalDate eurofxTime, DailyCurrencyRateHolder dailyCurrencyRateHolder) {
         currencyRateHolder.put(eurofxTime, dailyCurrencyRateHolder);
+        logger.info("Added new currency; "+eurofxTime);
     }
 
     public void evictOldEntries() {
