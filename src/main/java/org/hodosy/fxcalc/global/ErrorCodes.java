@@ -3,6 +3,7 @@ package org.hodosy.fxcalc.global;
 import java.util.logging.Level;
 
 public enum ErrorCodes {
+    UNKNOWN_ERROR("1000", "Unexpected error"),
     INPUT_ERROR("1001", "Wrong input parameter")
 
     ;

@@ -19,10 +19,6 @@ public class CustomResponseEntity<T> extends ResponseEntity<CustomResponseEntity
         this(body, HttpStatus.OK);
     }
 
-    public T getResponse() {
-        return getBody().getResponse();
-    }
-
     public void appendMessage(Message message) {
         getBody().getMessages().add(message);
     }

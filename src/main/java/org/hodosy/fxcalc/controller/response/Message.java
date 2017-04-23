@@ -40,6 +40,16 @@ public class Message {
         return parameters;
     }
 
+    @Override
+    public String toString() {
+        return "Message{" +
+                "code='" + code + '\'' +
+                ", severity='" + severity + '\'' +
+                ", text='" + text + '\'' +
+                ", field='" + field + '\'' +
+                '}';
+    }
+
     public static class MessageBuilder{
         private String code;
         private String severity;
@@ -47,14 +57,17 @@ public class Message {
         private String field;
         private Map<String, String> parameters = new HashMap<>();
 
-        public MessageBuilder code(String code){
-            this.code = code;
-            return this;
+        public MessageBuilder() {
         }
 
-        public MessageBuilder code(ErrorCodes code){
+        public MessageBuilder(ErrorCodes code) {
             this.code = code.getCode();
             this.severity = code.getSeverity();
+            this.text = code.getGenericMessage();
+        }
+
+        public MessageBuilder code(String code){
+            this.code = code;
             return this;
         }
 
