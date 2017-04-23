@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -29,8 +30,12 @@ public class FxCalcController {
 
     private static final Logger logger = Logger.getLogger(FxCalcController.class);
 
+    private final IFxService fxService;
+
     @Autowired
-    private IFxService fxService;
+    public FxCalcController(IFxService fxService) {
+        this.fxService = Objects.requireNonNull(fxService, "Required FxService is missing");
+    }
 
     @PostMapping(value = "/calculateExchangeRate_1_0.json")
     public CustomResponseEntity<CalculateExchangeRateResponse> calculateExchangeRate(

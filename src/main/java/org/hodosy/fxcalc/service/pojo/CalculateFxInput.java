@@ -2,25 +2,30 @@ package org.hodosy.fxcalc.service.pojo;
 
 import org.hodosy.fxcalc.global.SideEnum;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Past;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 
 public class CalculateFxInput {
     @NotNull
     private final String currency;
     @NotNull
+    @Min(0)
     private final BigDecimal amount;
     @NotNull
     private final SideEnum side;
     @NotNull
+    @Past
     private final ZonedDateTime dateTime;
 
     private CalculateFxInput(String currency, BigDecimal amount, SideEnum side, ZonedDateTime dateTime) {
-        this.currency = currency;
-        this.amount = amount;
-        this.side = side;
-        this.dateTime = dateTime;
+        this.currency = Objects.requireNonNull(currency, "Currency can't be null");
+        this.amount = Objects.requireNonNull(amount, "Amount can't be null");
+        this.side = Objects.requireNonNull(side, "Side must be either Buy or Sell");
+        this.dateTime = Objects.requireNonNull(dateTime, "Date time is not given");
     }
 
     public String getCurrency() {
