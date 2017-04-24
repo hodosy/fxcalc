@@ -20,9 +20,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("test-context.xml")
-public class FxServiceTest extends AbstractJUnit4SpringContextTests{
+public class FxServiceTest{
 
     @Test(expected = MessageException.class)
     public void testFeatureTime() throws Exception {
@@ -43,7 +41,7 @@ public class FxServiceTest extends AbstractJUnit4SpringContextTests{
         CalculateFxInput input = new CalculateFxInput.CalculateFxInputBuilder()
                 .amount(new BigDecimal("123"))
                 .currency("HUF")
-                .dateTime(ZonedDateTime.of(2017, 4, 18, 18, 53, 0, 0, ZoneId.systemDefault()))
+                .dateTime(ZonedDateTime.of(2017, 4, 10, 18, 53, 0, 0, ZoneId.systemDefault()))
                 .side(SideEnum.Buy)
                 .build();
 
@@ -56,7 +54,7 @@ public class FxServiceTest extends AbstractJUnit4SpringContextTests{
         CalculateFxInput input = new CalculateFxInput.CalculateFxInputBuilder()
                 .amount(new BigDecimal("123"))
                 .currency("XXX")
-                .dateTime(ZonedDateTime.of(2017, 4, 18, 18, 53, 0, 0, ZoneId.systemDefault()))
+                .dateTime(ZonedDateTime.of(2017, 4, 19, 18, 53, 0, 0, ZoneId.systemDefault()))
                 .side(SideEnum.Buy)
                 .build();
 
@@ -93,6 +91,31 @@ public class FxServiceTest extends AbstractJUnit4SpringContextTests{
         assertEquals(new BigDecimal("314.18"), response.getExchangeRate());
     }
 
+    @Test
+    public void testValidQuery_gapEntry() throws Exception {
+        FxService service = initialisedService();
+        CalculateFxInput input = new CalculateFxInput.CalculateFxInputBuilder()
+                .amount(new BigDecimal("123"))
+                .currency("HUF")
+                .dateTime(ZonedDateTime.of(2017, 4, 18, 18, 53, 0, 0, ZoneId.systemDefault()))
+                .side(SideEnum.Buy)
+                .build();
+
+        CalculateExchangeRateResponse response = service.calculateFx(input);
+
+        assertEquals(new BigDecimal("312.05"), response.getExchangeRate());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidQuery_negativeCommission() throws Exception {
+        new FxService("EUR", "CET", new BigDecimal("-1"), 5, 1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testValidQuery_greedyCommission() throws Exception {
+        new FxService("EUR", "CET", new BigDecimal("100"), 5, 1);
+    }
+
     private FxService initialisedService() {
         FxService service = new FxService("EUR", "CET", BigDecimal.ONE, 5, 1);
 
@@ -111,6 +134,12 @@ public class FxServiceTest extends AbstractJUnit4SpringContextTests{
         rate20170419.put("CHF", new BigDecimal("1.069"));
         service.addCurrencyMapping(LocalDate.of(2017, 4, 19), new DailyCurrencyRateHolder(rate20170419));
 
+        Map<String, BigDecimal> rate20170417 = new HashMap<>();
+        rate20170417.put("HUF", new BigDecimal("312.05"));
+        rate20170417.put("CHF", new BigDecimal("1.069"));
+        service.addCurrencyMapping(LocalDate.of(2017, 4, 17), new DailyCurrencyRateHolder(rate20170417));
+
         return service;
     }
+
 }

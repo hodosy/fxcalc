@@ -123,7 +123,7 @@ public class DataIntegrityService {
                         if (currency != null && rate != null) {
                             currencyPairs.put(currency, rate);
                         }
-                    } else if (localTimeEntry != null && entryDate != null) {
+                    } else {
                         fxService.addCurrencyMapping(entryDate, new DailyCurrencyRateHolder(currencyPairs));
                         entryDate = localTimeEntry;
                         currencyPairs = new HashMap<>();

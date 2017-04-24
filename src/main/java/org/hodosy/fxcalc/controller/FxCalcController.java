@@ -3,6 +3,7 @@ package org.hodosy.fxcalc.controller;
 import org.apache.log4j.Logger;
 import org.hodosy.fxcalc.controller.request.CalculateExchangeRateRequest;
 import org.hodosy.fxcalc.controller.response.CalculateExchangeRateResponse;
+import org.hodosy.fxcalc.controller.response.CommissionResponse;
 import org.hodosy.fxcalc.controller.response.CustomResponseEntity;
 import org.hodosy.fxcalc.controller.response.Message;
 import org.hodosy.fxcalc.global.ErrorCodes;
@@ -14,10 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.math.BigDecimal;
@@ -55,6 +53,11 @@ public class FxCalcController {
                 ).map(fxService::calculateFx)
                 .map(CustomResponseEntity::new)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown reason occured"));
+    }
+
+    @GetMapping(value = "/commission.json")
+    public CustomResponseEntity<CommissionResponse> calculateExchangeRate(){
+        return new CustomResponseEntity<>(fxService.getIncome());
     }
 
     @ExceptionHandler(BindException.class)

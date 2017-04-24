@@ -2,6 +2,7 @@ package org.hodosy.fxcalc.service;
 
 import org.apache.log4j.Logger;
 import org.hodosy.fxcalc.controller.response.CalculateExchangeRateResponse;
+import org.hodosy.fxcalc.controller.response.CommissionResponse;
 import org.hodosy.fxcalc.controller.response.Message;
 import org.hodosy.fxcalc.global.ErrorCodes;
 import org.hodosy.fxcalc.global.MessageException;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -22,8 +22,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -58,7 +56,7 @@ public class FxService implements IFxService {
     }
 
     private BigDecimal validateCommission(BigDecimal commission) {
-        if (commission.compareTo(BigDecimal.ZERO) >= 0 && commission.compareTo(HUNDRED) < 100) {
+        if (commission.compareTo(BigDecimal.ZERO) >= 0 && commission.compareTo(HUNDRED) < 0) {
             return commission.divide(HUNDRED, roundingScale, BigDecimal.ROUND_HALF_UP);
         }
         throw new IllegalArgumentException("Unacceptable commission (" + commission + "). Must be between 99 and 0");
@@ -67,21 +65,10 @@ public class FxService implements IFxService {
     @Override
     public CalculateExchangeRateResponse calculateFx(@Valid @NotNull CalculateFxInput input) throws MessageException {
         CalculateExchangeRateResponse output = new CalculateExchangeRateResponse();
-        ZonedDateTime eurofxTime = input.getDateTime().withZoneSameInstant(eurofxZoneId);
+        LocalDate eurofxTime = getDailyCurrencyRateKey(input.getDateTime());
+        output.setCalculatedOn(eurofxTime.format(DateTimeFormatter.ISO_LOCAL_DATE));
 
-        DailyCurrencyRateHolder dailyCurrencyRateHolder = currencyRateHolder.get(eurofxTime.toLocalDate());
-        if (dailyCurrencyRateHolder == null) {
-            if(ZonedDateTime.now().isBefore(input.getDateTime())){
-                throw new MessageException(new Message.MessageBuilder(ErrorCodes.EXCHANGE_RATE_NA_TIME_FEATURE).field("dateTime").build());
-            }else if(currencyRateHolder.lastKey().isBefore(eurofxTime.toLocalDate())){
-                dailyCurrencyRateHolder = currencyRateHolder.lastEntry().getValue();
-            }else {
-                throw new MessageException(new Message.MessageBuilder(ErrorCodes.EXCHANGE_RATE_NA_TIME).field("dateTime").build());
-            }
-        }
-        output.setCalculatedOn(eurofxTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-
-        BigDecimal exchangeRate = dailyCurrencyRateHolder.getExchangeRate(input.getCurrency());
+        BigDecimal exchangeRate = currencyRateHolder.get(eurofxTime).getExchangeRate(input.getCurrency());
         if (exchangeRate == null) {
             throw new MessageException(new Message.MessageBuilder(ErrorCodes.EXCHANGE_RATE_NA_CURRENCY).field("currency").build());
         }
@@ -109,12 +96,31 @@ public class FxService implements IFxService {
         return output;
     }
 
-    public void addCurrencyMapping(LocalDate eurofxTime, DailyCurrencyRateHolder dailyCurrencyRateHolder) {
-        currencyRateHolder.put(eurofxTime, dailyCurrencyRateHolder);
-        logger.info("Added new currency; "+eurofxTime);
+    private LocalDate getDailyCurrencyRateKey(ZonedDateTime usersDateTime) {
+        ZonedDateTime eurofxTime = usersDateTime.withZoneSameInstant(eurofxZoneId);
+        if (currencyRateHolder.containsKey(eurofxTime.toLocalDate())) {
+            return eurofxTime.toLocalDate();
+        } else {
+            if (ZonedDateTime.now().isBefore(eurofxTime)) {
+                throw new MessageException(new Message.MessageBuilder(ErrorCodes.EXCHANGE_RATE_NA_TIME_FEATURE).field("dateTime").build());
+            }
+            for (LocalDate ld = eurofxTime.toLocalDate().minusDays(1);
+                 currencyRateHolder.firstKey().compareTo(ld) <= 0;
+                 ld = ld.minusDays(1)) {
+                if (currencyRateHolder.containsKey(ld)) {
+                    return ld;
+                }
+            }
+            throw new MessageException(new Message.MessageBuilder(ErrorCodes.EXCHANGE_RATE_NA_TIME).field("dateTime").build());
+        }
     }
 
-    public void evictOldEntries() {
+    void addCurrencyMapping(LocalDate eurofxTime, DailyCurrencyRateHolder dailyCurrencyRateHolder) {
+        currencyRateHolder.put(eurofxTime, dailyCurrencyRateHolder);
+        logger.info("Added new currency; " + eurofxTime);
+    }
+
+    void evictOldEntries() {
         currencyRateHolder.keySet()
                 .stream()
                 .filter(getOldestAllowedEntry()::isAfter)
@@ -130,7 +136,7 @@ public class FxService implements IFxService {
         this.income = this.income.add(commission);
     }
 
-    public synchronized BigDecimal getIncome() {
-        return this.income;
+    public synchronized CommissionResponse getIncome() {
+        return new CommissionResponse(this.income, eurofxBaseCurrency);
     }
 }
