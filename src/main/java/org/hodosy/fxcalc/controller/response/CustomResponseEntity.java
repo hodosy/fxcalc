@@ -12,7 +12,7 @@ public class CustomResponseEntity<T> extends ResponseEntity<CustomResponseEntity
     }
 
     public CustomResponseEntity(T body, HttpStatus status) {
-        super(new ResponseWrapper<T>(body), status);
+        super(new ResponseWrapper<>(body), status);
     }
 
     public CustomResponseEntity(T body) {

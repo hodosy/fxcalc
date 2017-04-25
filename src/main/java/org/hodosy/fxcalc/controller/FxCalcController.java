@@ -55,8 +55,8 @@ public class FxCalcController {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown reason occured"));
     }
 
-    @GetMapping(value = "/commission.json")
-    public CustomResponseEntity<CommissionResponse> calculateExchangeRate(){
+    @GetMapping(value = "/commission_1_0.json")
+    public CustomResponseEntity<CommissionResponse> commission(){
         return new CustomResponseEntity<>(fxService.getIncome());
     }
 

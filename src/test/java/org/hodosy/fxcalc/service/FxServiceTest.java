@@ -6,10 +6,6 @@ import org.hodosy.fxcalc.global.SideEnum;
 import org.hodosy.fxcalc.service.pojo.CalculateFxInput;
 import org.hodosy.fxcalc.service.pojo.DailyCurrencyRateHolder;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,7 +14,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class FxServiceTest{
 

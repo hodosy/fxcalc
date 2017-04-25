@@ -11,7 +11,7 @@ public class DailyCurrencyRateHolder {
         this.exchangeRate = exchangeRate;
     }
 
-    public BigDecimal getExchangeRate(Object key) {
+    public BigDecimal getExchangeRate(String key) {
         return exchangeRate.get(key);
     }
 

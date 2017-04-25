@@ -44,7 +44,7 @@ public class FxService implements IFxService {
     @Autowired
     public FxService(@Value("${eurofxref.base.currency:EUR}") String eurofxBaseCurrency,
                      @Value("${eurofxref.timezone:CET}") String zoneId,
-                     @Value("${comission.in.percentage:1}") BigDecimal commission,
+                     @Value("${comission.in.percentage:0}") BigDecimal commission,
                      @Value("${rounding.scale:5}") int roundingScale,
                      @Value("${keep.for.days:60}") int keepForDays) {
         this.eurofxBaseCurrency = eurofxBaseCurrency;

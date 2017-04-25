@@ -3,6 +3,7 @@ package org.hodosy.fxcalc.service;
 import org.apache.log4j.Logger;
 import org.hodosy.fxcalc.service.pojo.DailyCurrencyRateHolder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -17,7 +18,6 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.URL;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +32,7 @@ public class DataIntegrityService {
     private final QName timeAttribute = new QName("time");
     private final QName currencyAttribute = new QName("currency");
     private final QName rateAttribute = new QName("rate");
-    private final XMLInputFactory factory = XMLInputFactory.newInstance();
+    private final XMLInputFactory xmlInputFactory;
     private final String eurofxrefDailyUrl;
     private final String eurofxref90daysUrl;
 
@@ -41,10 +41,13 @@ public class DataIntegrityService {
     private final TaskScheduler taskScheduler;
     private final CronTrigger dailyRateUpdateCronTrigger;
     private final CronTrigger evictionCronTrigger;
+    private final ResourceLoader resourceLoader;
 
     public DataIntegrityService(FxService fxService,
                                 TaskExecutor taskExecutor,
                                 TaskScheduler taskScheduler,
+                                ResourceLoader resourceLoader,
+                                XMLInputFactory xmlInputFactory,
                                 @Value("${eurofxref.daily.url}") String eurofxrefDailyUrl,
                                 @Value("${eurofxref.90day.url}") String eurofxref90daysUrl,
                                 @Value("${cron.daily.rate.update}") String dailyRateUpdateSchedule,
@@ -53,6 +56,8 @@ public class DataIntegrityService {
         this.fxService = Objects.requireNonNull(fxService, "Required FxService has not initialised");
         this.taskExecutor = Objects.requireNonNull(taskExecutor, "Required task executor service has not initialised");
         this.taskScheduler = Objects.requireNonNull(taskScheduler, "Required task scheduler service has not initialised");
+        this.resourceLoader = Objects.requireNonNull(resourceLoader, "Resource Loader service has not initialised");
+        this.xmlInputFactory = Objects.requireNonNull(xmlInputFactory, "XMLInputFactory has not initialised");
         this.eurofxrefDailyUrl = eurofxrefDailyUrl;
         this.eurofxref90daysUrl = eurofxref90daysUrl;
         this.dailyRateUpdateCronTrigger = new CronTrigger(dailyRateUpdateSchedule);
@@ -84,8 +89,7 @@ public class DataIntegrityService {
     private void parseFile(String xmlAccessPath) {
         XMLEventReader eventReader;
         try {
-            eventReader = factory.createXMLEventReader(
-                    new URL(xmlAccessPath).openStream());
+            eventReader = xmlInputFactory.createXMLEventReader(resourceLoader.getResource(xmlAccessPath).getInputStream());
         } catch (IOException e) {
             logger.error("Error on retrieving the xml. Will try again.", e);
             taskExecutor.execute(() -> parseFile(xmlAccessPath));

@@ -12,7 +12,7 @@ public class Message {
     private final String field;
     private final Map<String, String> parameters;
 
-    Message(String code, String severity, String text, String field, Map<String, String> parameters) {
+    private Message(String code, String severity, String text, String field, Map<String, String> parameters) {
         this.code = code;
         this.severity = severity;
         this.text = text;
